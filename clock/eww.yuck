@@ -1,0 +1,80 @@
+(defwindow wclock
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+    :x "10px"
+    :y "10px"
+    :width "30px"
+    :height "30px")
+  (clock :size 30)
+)
+(defwidget clock [size]
+  (overlay
+    (marker :size size :v 0)
+    (marker :size size :v 1)
+    (marker :size size :v 2)
+    (marker :size size :v 3)
+    (marker :size size :v 4)
+    (marker :size size :v 5)
+    (marker :size size :v 6)
+    (marker :size size :v 7)
+    (marker :size size :v 8)
+    (marker :size size :v 9)
+    (marker :size size :v 10)
+    (marker :size size :v 11)
+
+    (transform
+      :rotate {time.second / 60 * 100 }
+      :transform-origin-x "50%"
+      :transform-origin-y "50%"
+      (box :orientation "h" :space-evenly false
+        (box :hexpand true)
+          (box :orientation "v" :valign "start" :width {round(size * 0.01, 0)}
+            (box :height {round(size * 0.5, 0)} :orientation "v" :style "background-color: white;")
+          )
+        (box :hexpand true)
+      )
+    )
+    (transform
+      :rotate {time.minute / 60 * 100 }
+      :transform-origin-x "50%"
+      :transform-origin-y "50%"
+      (box :orientation "h" :space-evenly false
+        (box :hexpand true)
+          (box :orientation "v" :valign "start" :width {round(size * 0.02, 0)}
+            (box :height {round(size * 0.5, 0)} :orientation "v" :style "background-color: white; margin-top: ${round(size * 0.08, 0)}px; border-radius: ${round(size * 0.01, 0)}px;")
+          )
+        (box :hexpand true)
+      )
+    )
+    (transform
+      :rotate {time.hour / 12 * 100 }
+      :transform-origin-x "50%"
+      :transform-origin-y "50%"
+      (box :orientation "h" :space-evenly false
+        (box :hexpand true)
+          (box :orientation "v" :valign "start" :width {round(size * 0.05, 0)}
+            (box :height {round(size * 0.5, 0)} :orientation "v" :style "background-color: white; margin-top: ${round(size * 0.2, 0)}px; border-radius: ${round(size * 0.025, 0)}px;")
+          )
+        (box :hexpand true)
+      )
+    )
+  )
+)
+
+(defwidget marker [v size]
+  (transform
+    :rotate {v / 12 * 100 }
+    :transform-origin-x "50%"
+    :transform-origin-y "50%"
+    (box :orientation "h" :space-evenly false
+      (box :hexpand true)
+        (box :orientation "v" :valign "start" :width {round(size * 0.01, 0)}
+          (box :height {round(size * 0.05, 0)} :orientation "v" :style "background-color: white;")
+        )
+      (box :hexpand true)
+    )
+  )
+)
+(defpoll time :interval "1s" :initial '{"hour": 0, "minute": 0, "second": 0}' `date '+{"hour": %-H, "minute": %-M, "second": %-S}'`)
