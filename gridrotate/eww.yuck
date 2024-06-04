@@ -1,0 +1,32 @@
+(defwindow grid
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+    :x "10px"
+    :y "10px"
+    :width "100px"
+    :height "100px")
+  (transform
+    ;:rotate {-0.5 * percentloop}
+    :rotate 15
+    :transform-origin-x "50%"
+    :transform-origin-y "50%"
+    (box :orientation 'v' :style 'padding: 5px;'
+      (box :orientation 'h'
+        (label :style 'background-color: grey;' ' ')
+        (label :style 'background-color: green;' ' '))
+      (box :orientation 'h'
+        (label :style 'background-color: red;' ' ')
+        (transform
+          :rotate {2*percentloop}
+          :transform-origin-x "30%"
+          :transform-origin-y "50%"
+          :translate-x "-20%"
+          (box
+            (box :space-evenly true
+              (label :style 'background-color: yellow;' ' ')
+              (label :style 'background-color: black;' ' ')
+              (label :style 'background-color: yellow;' ' '))))))))
+
+(deflisten percentloop :initial 0 `i=0; while true; do let i=$i+1; echo $i; sleep .05; done`)
