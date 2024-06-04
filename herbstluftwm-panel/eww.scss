@@ -1,0 +1,85 @@
+* {
+    all: unset;
+    font-size: 10px;
+    font-family: "FiraCode Nerd Font", "Unifont";
+    margin: 0px;
+    padding: 0px;
+}
+
+.mode_buttons {
+    background-color: #222222;
+}
+
+.mode_buttons button {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.mode_buttons button.focused {
+    background-color: #00cccc;
+    color: #000000;
+}
+
+.tag_container .focused {
+    background-color: #00ffff;
+    color: #000000;
+}
+
+.nonempty {
+    background-color: #00ff00;
+    color: #000000;
+}
+
+.empty {
+    background-color: #000000;
+    color: #00ffff;
+}
+
+.urgent {
+    background-color: #ff0675;
+    color: #141414;
+}
+
+.focused_this_monitor_unfocused {
+    background-color: #9Cb6a8;
+    color: #000000;
+}
+
+.focused_other_monitor_focused {
+    background-color: #5ce0e0;
+    color: #000000;
+}
+
+.focused_other_monitor_unfocused {
+    background-color: #9ca668;
+    color: #000000;
+}
+
+.stats * {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.volbars {
+  margin: 0px;
+  padding: 0px;
+}
+
+circular-progress {
+    background-color: #777;
+    color: yellow;
+}
+
+progress {
+    background-color: yellow;
+    color: yellow;
+}
+
+graph {
+    background-color: #777;
+    color: yellow;
+}
+
+.powermenu button label {
+    font-size: 16px;
+}

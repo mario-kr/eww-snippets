@@ -1,0 +1,334 @@
+(defwindow panel
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+              :y "0px"
+              :width "5360px"
+              :height "16px")
+  (box :class "panelcontainer" :space-evenly false
+    (hlwm_panel
+      :width {mode == "work" ? 1720 : 3440}
+      :visible true
+      :location "main"
+    )
+    (hlwm_panel
+      :width 1720
+      :visible {mode == "work"}
+      :location "main2"
+    )
+    (hlwm_panel
+      :width 1080
+      :visible true
+      :location "side"
+    )
+  )
+)
+
+(defwidget hlwm_panel [width visible location]
+  (box :orientation "horizontal" :class "container" :width width :visible visible :space-evenly false
+    (box :space-evenly false
+      (mode_buttons)
+      (separator)
+      (taglist :location location)
+    )
+    (box :hexpand true
+      (label :text windowtitle :limit-width 30 :style "padding-left: 2px;" :visible {location != "side"})
+    )
+    (box :space-evenly false :halign "end" :class "stats" :visible {location != "side"} :halign "end"
+      (separator)
+      (volumebars)
+      (separator)
+      (volumestat)
+      (separator)
+      (netstats)
+      (separator)
+      (cputemp)
+      (separator)
+      (cpustats)
+      (separator)
+      (ramstats)
+      (separator)
+      (label :text time)
+      (separator)
+      (powermenutoggle)
+    )
+    (box :space-evenly false :halign "end" :class "stats" :visible {location == "side"} :halign "end"
+      (separator)
+      (label :text time)
+      (separator)
+      (powermenutoggle)
+    )
+  )
+)
+
+;separator between widgets
+(defwidget separator []
+  (label :text '' :width 1 :style 'background-color: #444444; color: #444444; padding: 0px;')
+)
+
+;vars for changing modes/getting information from them
+(defvar mode "general")
+(defvar modemap '{"general": {"shortname": "", "main": "general_main", "main2": "general_main2", "side": "general_side"}, "other": {"shortname": "o", "main": "other_main", "main2": "other_main2", "side": "other_side"}, "work": {"shortname": "w", "main": "work_main", "main2": "work_main2", "side": "work_side"}}')
+
+(defwidget mode_buttons []
+  (box :class "mode_buttons"
+    (button
+      :onclick "hlwm switchmode general"
+      :timeout "700ms"
+      :class {mode == "general" ? "focused" : "mode_button"}
+      "general"
+    )
+    (button
+      :onclick "hlwm switchmode other"
+      :timeout "700ms"
+      :class {mode == "other" ? "focused" : "mode_button"}
+      "other"
+    )
+    (button
+      :onclick "hlwm switchmode work"
+      :timeout "700ms"
+      :class {mode == "work" ? "focused" : "mode_button"}
+      "work"
+    )
+  )
+)
+
+;list of tags (without mode)
+(defvar tags '["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"]')
+
+;tag information (name and status)
+(deflisten hlwm_tags
+  :initial '{"general_main": {"1": {"status": "empty"},"2": {"status": "empty"},"3": {"status": "empty"},"4": {"status": "empty"},"5": {"status": "empty"},"6": {"status": "empty"},"7": {"status": "empty"},"8": {"status": "empty"},"9": {"status": "empty"},"0": {"status": "empty"},"F1": {"status": "empty"},"F2": {"status": "empty"},"F3": {"status": "empty"},"F4": {"status": "empty"},"F5": {"status": "empty"},"F6": {"status": "empty"},"F7": {"status": "empty"},"F8": {"status": "empty"},"F9": {"status": "empty"},"F10": {"status": "empty"},"F11": {"status": "empty"},"F12": {"status": "empty"}}}'
+  '~/.config/eww/scripts/hlwm_tags.sh'
+)
+
+(defwidget taglist [location]
+  (box
+    (for tag in tags
+      (box :space-evenly false :class "tag_container"
+        (button
+          :onclick 'herbstclient focus_monitor ${mode}_${location} && herbstclient use ${modemap[mode]['shortname']}${tag}'
+          :class {hlwm_tags?.[modemap?.[mode]?.[location]]?.[modemap?.[mode]?.shortname + tag]?.status}
+          :width 30
+          (label :xalign 0.5 :text "${modemap[mode]?.shortname}${tag}")
+        )
+        (separator)
+      )
+    )
+  )
+)
+
+;current windowtitle as reported by herbstluftwm
+(deflisten windowtitle :initial "none"
+  `~/.config/eww/scripts/hlwm_windowtitle.sh`
+)
+
+;current volume
+(defpoll volume
+  :interval "1s"
+  :initial 0
+  :run-while {volume_mute == "false"}
+  "pamixer --get-volume"
+)
+(defpoll volume_mute
+  :interval "1s"
+  :initial "false"
+  `pamixer --get-mute; echo`
+)
+(defwidget volumestat []
+  (box :space-evenly false
+    (circular-progress
+      :width 18
+      :thickness 3
+      :start-at 75
+      :value {volume_mute == 'true' ? 0 : volume}
+    )
+    (label :text "Master")
+    (label :text "${volume_mute == 'true' ? 'mute' : '${volume}%'}")
+  )
+)
+
+(deflisten volume_bars :initial "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+  `cava | sed -uE 's/^/[/;s/,$/]/;'`
+)
+(defwidget volumebars []
+  (box :space-evenly false :spacing -4 :class "volbars"
+    (for bar in volume_bars
+      (box :space-evenly false :orientation "v" :width 1 :spacing -1
+        (box :style "background-color: black;" :valign "start" :width 1 :height {15 - bar})
+        (box :style "background-color: yellow;" :valign "fill" :vexpand true :width 1 :height {bar})
+      )
+    )
+  )
+)
+
+(defpoll constat
+  :interval "2s"
+  "ip addr show enp34s0 | grep -q 'inet ' && echo true || echo false"
+)
+(defwidget netstats []
+  (box :space-evenly false
+    (overlay :width 40
+      (graph
+        :time-range "20s"
+        :thickness 2
+        :value {EWW_NET.enp34s0.NET_UP}
+        :min 0
+        :dynamic true
+        :style "color: red; background-color: transparent;"
+      )
+      (graph
+        :time-range "20s"
+        :thickness 2
+        :value {EWW_NET.enp34s0.NET_DOWN}
+        :min 0
+        :dynamic true
+        :style "color: green; background-color:transparent;"
+      )
+    )
+    (label
+      :text "enp34s0"
+      :style "color: ${constat == 'true' ? '#00ff00' : '#ff0000'};"
+    )
+    (label
+      :text "⯅ ${EWW_NET.enp34s0.NET_UP >= 1024 * 1024 ? '${round(EWW_NET.enp34s0.NET_UP / (1024 * 1024), 1)} M' : EWW_NET.enp34s0.NET_UP >= 1024 ? '${round(EWW_NET.enp34s0.NET_UP / 1024, 1)} K' : '${round(EWW_NET.enp34s0.NET_UP, 1)}'}"
+      :width 60
+      :style "color: #ff0000;"
+    )
+    (label
+      :text "⯆ ${EWW_NET.enp34s0.NET_DOWN >= 1024 * 1024 ? `${round(EWW_NET.enp34s0.NET_DOWN / (1024 * 1024), 1)} M` : EWW_NET.enp34s0.NET_DOWN >= 1024 ? `${round(EWW_NET.enp34s0.NET_DOWN / 1024, 1)} K` : `${round(EWW_NET.enp34s0.NET_DOWN, 1)}`}"
+      :width 60
+      :style "color: #00ff00;"
+    )
+  )
+)
+
+(defwidget cputemp []
+  (label
+    :text "${round(EWW_TEMPS.K10TEMP_TCTL, 1)} °C"
+    :width 50
+    :style "color: ${EWW_TEMPS.K10TEMP_TCTL <= 40 ? '#00ffff' : EWW_TEMPS.K10TEMP_TCTL <= 45 ? '#00ff00' : EWW_TEMPS.K10TEMP_TCTL <= 50 ? '#ffff00' : EWW_TEMPS.K10TEMP_TCTL <= 55 ? '#ff8000' : '#ff0000'};"
+  )
+)
+
+;helper widget for core-usage-graphs
+(defwidget coreusage [core]
+  (graph :time-range "20s" :value {EWW_CPU.cores[core].usage} :min 0 :max 100)
+)
+
+(defwidget cpustats []
+  (eventbox
+    :onclick "${EWW_CMD} open --toggle allcorestats --screen $(herbstclient attr monitors.focus.name | grep -q side && echo 1 || echo 0)"
+    (box :space-evenly false
+      (overlay :width 40
+        ;avg
+        (graph :value {EWW_CPU.avg} :min 0 :max 100 :thickness 2 :time-range "20s")
+        (coreusage :core 0)
+        (coreusage :core 1)
+        (coreusage :core 2)
+        (coreusage :core 3)
+        (coreusage :core 4)
+        (coreusage :core 5)
+        (coreusage :core 6)
+        (coreusage :core 7)
+        (coreusage :core 8)
+        (coreusage :core 9)
+        (coreusage :core 10)
+        (coreusage :core 11)
+        (coreusage :core 12)
+        (coreusage :core 13)
+        (coreusage :core 14)
+        (coreusage :core 15)
+      )
+      (label :width 60 :text "CPU ${round(EWW_CPU.avg, 1)}%")
+    )
+  )
+)
+
+(defwindow allcorestats
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+    :anchor "top right"
+    :x "-230px"
+    :y "20px"
+    :width "70px"
+    :height "260px"
+  )
+  (box :orientation "vertical"
+    (for core in "${EWW_CPU.cores}"
+      (label :width 60 :text "${core.core}: ${core.usage}%")
+    )
+  )
+)
+
+(defwidget ramstats []
+  (eventbox
+    :onclick "${EWW_CMD} open --toggle ramextra --screen $(herbstclient attr monitors.focus.name | grep -q side && echo 1 || echo 0)"
+    (box :space-evenly false
+      (circular-progress
+        :width 18
+        :thickness 3
+        :start-at 75
+        :value {EWW_RAM.used_mem_perc}
+      )
+      (label
+        :width 25
+        :text "RAM"
+      )
+    )
+  )
+)
+
+(defwindow ramextra
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+    :anchor "top right"
+    :x "-105px"
+    :y "20px"
+    :width "70px"
+    :height "50px"
+  )
+  (box :orientation "vertical"
+    (label :text "Used: ${round(EWW_RAM.used_mem / 1024 / 1024, 0)} MiB")
+    (label :text "Free: ${round(EWW_RAM.free_mem / 1024 / 1024, 0)} MiB")
+    (label :text "Avail: ${round(EWW_RAM.available_mem / 1024 / 1024, 0)} MiB")
+  )
+)
+
+;current time and date
+(defpoll time
+  :interval "1s"
+  :initial "00:00:00"
+  `date '+%H:%M:%S %d.%m.%Y'`
+)
+
+(defwidget powermenutoggle []
+  (button
+    :onclick "${EWW_CMD} open --toggle powermenu --screen $(herbstclient attr monitors.focus.name | grep -q side && echo 1 || echo 0)"
+    ""
+  )
+)
+
+(defwindow powermenu
+  :stacking "fg"
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry (geometry
+    :anchor "top right"
+    :x "-4px"
+    :y "20px"
+    :width "150px"
+    :height "40px"
+  )
+  (box :orientation "horizontal" :class "powermenu" :hexpand true
+    (button :style "font-size: 32px;" :onclick "xautolock -locknow" "")
+    (button :style "font-size: 32px;" :onclick "systemctl suspend" "󰒲")
+    (button :style "font-size: 32px;" :onclick "systemctl poweroff" "")
+    (button :style "font-size: 32px;" :onclick "systemctl reboot" "")
+  )
+)
