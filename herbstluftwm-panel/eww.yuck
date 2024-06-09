@@ -37,6 +37,8 @@
     )
     (box :space-evenly false :halign "end" :class "stats" :visible {location != "side"} :halign "end"
       (separator)
+      (systray :icon-size 16 :prepend-new true)
+      (separator)
       (volumebars)
       (separator)
       (volumestat)
