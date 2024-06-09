@@ -72,24 +72,24 @@
 (defvar modemap '{"general": {"shortname": "", "main": "general_main", "main2": "general_main2", "side": "general_side"}, "other": {"shortname": "o", "main": "other_main", "main2": "other_main2", "side": "other_side"}, "work": {"shortname": "w", "main": "work_main", "main2": "work_main2", "side": "work_side"}}')
 
 (defwidget mode_buttons []
-  (box :class "mode_buttons"
+  (box :class "mode_buttons" :space-evenly true :width 120
     (button
       :onclick "hlwm switchmode general"
       :timeout "700ms"
       :class {mode == "general" ? "focused" : "mode_button"}
-      "general"
+      " 󰋜 "
     )
     (button
       :onclick "hlwm switchmode other"
       :timeout "700ms"
       :class {mode == "other" ? "focused" : "mode_button"}
-      "other"
+      "  "
     )
     (button
       :onclick "hlwm switchmode work"
       :timeout "700ms"
       :class {mode == "work" ? "focused" : "mode_button"}
-      "work"
+      " 󰳰 "
     )
   )
 )
@@ -144,8 +144,7 @@
       :start-at 75
       :value {volume_mute == 'true' ? 0 : volume}
     )
-    (label :text "Master")
-    (label :text "${volume_mute == 'true' ? 'mute' : '${volume}%'}")
+    (label :text "${volume_mute == 'true' ? '   mute' : volume > 20 ? '  ${volume}%' : '  ${volume}%'}")
   )
 )
 
